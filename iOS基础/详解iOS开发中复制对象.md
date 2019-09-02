@@ -73,10 +73,12 @@
         ```
 ##  怎么用 copy 关键字？
 - 用途：
-    1. NSString、NSArray、NSDictionary 等等经常使用copy关键字，是因为他们有对应的可变类型：NSMutableString、NSMutableArray、NSMutableDictionary；
+    1. 用 `@property` 声明 NSString、NSArray、NSDictionary 经常使用 copy 关键字，是因为他们有对应的可变类型：NSMutableString、NSMutableArray、NSMutableDictionary，他们之间可能进行赋值操作，为确保对象中的字符串值不会无意间变动，应该在设置新属性值时拷贝一份。
+    
     2. block 也经常使用 copy 关键字，在 ARC 中写不写都行：对于 block 使用 copy 还是 strong 效果是一样的，但写上 copy 也无伤大雅，还能时刻提醒我们：编译器自动对 block 进行了 copy 操作。具体原因见官方文档。
 - 如果属性声明中指定了copy特性，合成方法会使用类的copy方法，**这里注意：属性并没有mutableCopy特性。即使是可变的实例变量，也是使用copy特性，正如方法 ```copyWithZone:```的执行结果。所以，按照约定会生成一个对象的不可变副本。**
 - 这里就引出了一个思考题：这个写法会出什么问题： ```@property (noatomic, copy) NSMutableArray *array;```
+  
     - 添加,删除,修改数组内的元素的时候,程序会因为找不到对应的方法而崩溃.因为 copy 就是复制一个不可变 NSArray 的对象
 - 用@property声明的NSString（或NSArray，NSDictionary）经常使用copy关键字，为什么？如果改用strong关键字，可能造成什么问题？
     1. 因为父类指针可以指向子类对象,使用 copy 的目的是为了让本对象的属性不受外界影响,使用 copy 无论给我传入是一个可变对象还是不可对象,我本身持有的就是一个不可变的副本.
