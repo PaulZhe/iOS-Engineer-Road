@@ -716,3 +716,7 @@ dispatch_once(&pred, ^{
     //初始化
 });
 ```
+
+
+
+**参考博客**：[iOS 多线程：『GCD』详尽总结](https://bujige.net/blog/iOS-Complete-learning-GCD.html)
