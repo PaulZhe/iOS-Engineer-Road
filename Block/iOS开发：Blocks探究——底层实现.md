@@ -705,7 +705,7 @@ struct __main_block_impl_0 {
 
 - 这种块不会捕捉任何状态（比如外围的变量等），运行时也无须有状态来参与。块所使用的整个内存区域。在编译期已经完全确定了，因此，全局块可以声明在全局内存里，而不需要在每次用到的时候于栈创建。
 
-- 针对没有捕获自己主动变量的block来说，尽管用clang的rewrite-objc转化后的代码中仍显示`isa`指针指向`_NSConcretStackBlock`，可是实际上不是这样。它的类型还是全局的，具体可以参考一下这篇文章：[block存储区域——怎样验证block在栈上，还是堆上](https://blog.csdn.net/weixin_34216036/article/details/85689650)
+- 针对没有捕获自己主动变量的block来说，尽管用clang的rewrite-objc转化后的代码中仍显示`isa`指针指向`_NSConcretStackBlock`，可是实际上不是这样。它的类型还是全局的，具体可以参考一下这篇文章：[block存储区域——怎样验证block在栈上，还是堆上](https://blog.csdn.net/weixin_34216036/article/details/85689650/)
 
 - 记述全局变量的地方，使用 Block 语法示例代码：
 
