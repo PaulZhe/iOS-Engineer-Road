@@ -217,6 +217,8 @@ struct __main_block_impl_0 myBlock = &temp;
 
 # 截获自动变量值
 
+## 截获局部变量值
+
 ```objectivec
 // 使用 Blocks 截获局部变量值
 - (void)useBlockInterceptLocalVariables {
@@ -314,6 +316,109 @@ int main () {
 > 在定义 Block 表达式的时候，局部变量使用**『值传递』**的方式传入 Block 结构体中，并保存为 Block 的成员变量。
 >
 > 而当外部局部变量发生变化的时候，Block 结构体内部对应的的成员变量的值并没有发生改变，所以无论调用几次，Block 表达式结果都没有发生改变。
+
+## 截获对象类型局部变量
+
+我们看一下在block里截获了array对象的代码，array超过了其作用域存在：
+
+```objectivec
+blk_t blk;
+{
+    id array = [NSMutableArray new];
+    blk = [^(id object){
+        [array addObject:object];
+        NSLog(@"array count = %ld",[array count]);
+            
+    } copy];
+}
+    
+blk([NSObject new]);
+blk([NSObject new]);
+blk([NSObject new]);
+```
+
+输出：
+
+```objectivec
+block_demo[28963:1629127] array count = 1
+block_demo[28963:1629127] array count = 2
+block_demo[28963:1629127] array count = 3
+```
+
+看一下C++代码：
+
+```cpp
+struct __main_block_impl_0 {
+  struct __block_impl impl;
+  struct __main_block_desc_0* Desc;
+  id array;//截获的对象
+  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, id _array, int flags=0) : array(_array) {
+    impl.isa = &_NSConcreteStackBlock;
+    impl.Flags = flags;
+    impl.FuncPtr = fp;
+    Desc = desc;
+  }
+};
+```
+
+值得注意的是，在OC中，C结构体里不能含有被__strong修饰的变量，因为编译器不知道应该何时初始化和废弃C结构体。但是OC的运行时库能够准确把握Block从栈复制到堆，以及堆上的block被废弃的时机，在实现上是通过__main_block_copy_0函数和__main_block_dispose_0函数进行的:
+
+```cpp
+static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {
+    _Block_object_assign((void*)&dst->array, (void*)src->array, 3/*BLOCK_FIELD_IS_OBJECT*/);
+}
+
+static void __main_block_dispose_0(struct __main_block_impl_0*src) {
+    _Block_object_dispose((void*)src->array, 3/*BLOCK_FIELD_IS_OBJECT*/);
+}
+```
+
+> 其中，_Block_object_assign相当于retain操作，将对象赋值在对象类型的结构体成员变量中。 _Block_object_dispose相当于release操作。
+
+这两个函数调用的时机是在什么时候呢？
+
+| 函数                   | 被调用时机          |
+| ---------------------- | ------------------- |
+| __main_block_copy_0    | 从栈复制到堆时      |
+| __main_block_dispose_0 | 堆上的Block被废弃时 |
+
+**什么时候栈上的Block会被复制到堆呢？**
+
+- 调用block的copy函数时
+- Block作为函数返回值返回时
+- 将Block赋值给附有__strong修饰符id类型的类或者Block类型成员变量时
+- 方法中含有usingBlock的Cocoa框架方法或者GCD的API中传递Block时
+
+**什么时候Block被废弃呢？**
+
+堆上的Block被释放后，谁都不再持有Block时调用dispose函数。
+
+__weak关键字：
+
+```cpp
+{
+        id array = [NSMutableArray new];
+        id __weak array2 = array;
+        blk = ^(id object){
+            [array2 addObject:object];
+            NSLog(@"array count = %ld",[array2 count]);
+        };
+    }
+    
+    blk([NSObject new]);
+    blk([NSObject new]);
+    blk([NSObject new]);
+```
+
+输出：
+
+```cpp
+ block_demo[32084:1704240] array count = 0
+ block_demo[32084:1704240] array count = 0
+ block_demo[32084:1704240] array count = 0
+```
+
+因为array在变量作用域结束时被释放，nil被赋值给了array2中。
 
 # Blocks 内改写被截获变量的值的办法
 
@@ -640,7 +745,7 @@ __Block_byref_obj_0 *__forwarding;
 };
 ```
 
-被`__strong`修饰的`id`类型或对象类型自动变量的`copy`和`dispose`方法：
+被__strong修饰的id类型或对象类型自动变量的copy和dispose方法：
 
 ```cpp
 static void __Block_byref_id_object_copy_131(void *dst, void *src) {
@@ -652,21 +757,10 @@ static void __Block_byref_id_object_dispose_131(void *src) {
 }
 ```
 
-同样，当Block持有被`__strong`修饰的`id`类型或对象类型自动变量时：
+同样，当Block持有被__strong修饰的id类型或对象类型自动变量时：
 
-- 如果`__block`对象变量从栈复制到堆时，使用`_Block_object_assign`函数，
-- 当堆上的`__block`对象变量被废弃时，使用`_Block_object_dispose`函数。
-
-> 其中，_Block_object_assign相当于retain操作，将对象赋值在对象类型的结构体成员变量中。 _Block_object_dispose相当于release操作。  
-
-这两个函数调用的时机是在什么时候呢？
-
-| 函数                   | 被调用时机          |
-| ---------------------- | ------------------- |
-| __main_block_copy_0    | 从栈复制到堆时      |
-| __main_block_dispose_0 | 堆上的Block被废弃时 |
-
- 
+- 如果__block对象变量从栈复制到堆时，使用_Block_object_assign函数，
+- 当堆上的__block对象变量被废弃时，使用_Block_object_dispose函数。
 
 ```cpp
 struct __main_block_impl_0 {
