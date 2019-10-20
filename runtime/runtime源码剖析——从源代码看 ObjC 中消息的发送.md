@@ -34,8 +34,6 @@
 
 由于这个系列的文章都是对 Objective-C 源代码的分析，所以会**从 Objective-C 源代码中分析并合理地推测一些关于消息传递的问题**。
 
-![objc-message-core](/Users/xiaozhededell/Documents/iOS/images/objc-message-core.png)
-
 ## 关于 @selector() 你需要知道的
 
 因为在 Objective-C 中，所有的消息传递中的“消息“都会被转换成一个 `selector` 作为 `objc_msgSend` 函数的参数：
@@ -94,7 +92,7 @@ int main(int argc, const char * argv[]) {
 
 在主函数任意位置打一个断点， 比如 `-> [object hello];` 这里，然后在 lldb 中输入：
 
-![objc-message-selecto](/Users/xiaozhededell/Documents/iOS/images/objc-message-selector.png)
+![objc-message-selecto](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-selector.png)
 
 这里面我们打印了两个选择子的地址` @selector(hello)` 以及 `@selector(undefined_hello_method)`，需要注意的是：
 
@@ -102,7 +100,7 @@ int main(int argc, const char * argv[]) {
 
 如果我们修改程序的代码：
 
-![objc-message-selector-undefined](/Users/xiaozhededell/Documents/iOS/images/objc-message-selector-undefined.png)
+![objc-message-selector-undefined](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-selector-undefined.png)
 
 在这里，由于我们在代码中显示地写出了 `@selector(undefined_hello_method)`，所以在 lldb 中再次打印这个 `sel` 内存地址跟之前相比有了很大的改变。
 
@@ -116,7 +114,7 @@ int main(int argc, const char * argv[]) {
 
 在运行时初始化之前，打印 `hello` 选择子的的内存地址：
 
-![objc-message-find-selector-before-init](/Users/xiaozhededell/Documents/iOS/images/objc-message-find-selector-before-init.png)
+![objc-message-find-selector-before-init](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-find-selector-before-init.png)
 
 ## message.h 文件
 
@@ -181,7 +179,7 @@ int main(int argc, const char * argv[]) {
 
 在调用 `hello` 方法的这一行打一个断点，当我们尝试进入（Step in）这个方法只会直接跳入这个方法的实现，而不会进入 `objc_msgSend`：
 
-![objc-message-wrong-step-in](/Users/xiaozhededell/Documents/iOS/images/objc-message-wrong-step-in.gif)
+![objc-message-wrong-step-in](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-wrong-step-in.gif)
 
 因为 `objc_msgSend` 是一个私有方法，我们没有办法进入它的实现，但是，我们却可以在 `objc_msgSend` 的调用栈中“截下”这个函数调用的过程。
 
@@ -191,7 +189,7 @@ int main(int argc, const char * argv[]) {
 
 在 `objc-runtime-new.mm` 文件中有一个函数 `lookUpImpOrForward`，这个函数的作用就是查找方法的实现，于是运行程序，在运行到 `hello` 这一行时，激活 `lookUpImpOrForward` 函数中的断点。
 
-<a href="https://youtu.be/bCdjdI4VhwQ" target="_blank"><img src='../images/objc-message-youtube-preview.jpg'></a>
+![img](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-youtube-preview.jpg)
 
 > 由于转成 gif 实在是太大了，笔者试着用各种方法生成动图，然而效果也不是很理想，只能贴一个 Youtube 的视频链接，不过对于能够翻墙的开发者们，应该也不是什么问题吧（手动微笑）
 
@@ -205,7 +203,7 @@ int main(int argc, const char * argv[]) {
 
 在 `-> [object hello]` 这里增加一个断点，**当程序运行到这一行时**，再向 `lookUpImpOrForward` 函数的第一行添加断点，确保是捕获 `@selector(hello)` 的调用栈，而不是调用其它选择子的调用栈。
 
-![objc-message-first-call-hello](/Users/xiaozhededell/Documents/iOS/images/objc-message-first-call-hello.png)
+![objc-message-first-call-hello](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-first-call-hello.png)
 
 由图中的变量区域可以了解，传入的选择子为 `"hello"`，对应的类是 `XXObject`。所以我们可以确信这就是当调用 `hello` 方法时执行的函数。在 Xcode 左侧能看到方法的调用栈：
 
@@ -292,11 +290,11 @@ imp = cache_getImp(cls, sel);
 if (imp) goto done;
 ```
 
-![objc-message-cache-struct](/Users/xiaozhededell/Documents/iOS/images/objc-message-cache-struct.png)
+![objc-message-cache-struct](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-cache-struct.png)
 
 不过 `cache_getImp` 的实现目测是不开源的，同时也是汇编写的，在我们尝试 step in 的时候进入了如下的汇编代码。
 
-![objc-message-step-in-cache-getimp](/Users/xiaozhededell/Documents/iOS/images/objc-message-step-in-cache-getimp.png)
+![objc-message-step-in-cache-getimp](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-step-in-cache-getimp.png)
 
 它会进入一个 `CacheLookup` 的标签，获取实现，使用汇编的原因还是因为要加速整个实现查找的过程，其原理推测是在类的 `cache` 中寻找对应的实现，只是做了一些性能上的优化。
 
@@ -485,7 +483,7 @@ cache_fill(cls, sel, imp, inst);
 
 这样就结束了整个方法第一次的调用过程，缓存没有命中，但是在当前类的方法列表中找到了 `hello` 方法的实现，调用了该方法。
 
-![objc-message-first-call-hello](../images/objc-message-first-call-hello.png)
+![objc-message-first-call-hello](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-first-call-hello.png)
 
 
 ## 缓存命中
@@ -505,7 +503,7 @@ int main(int argc, const char * argv[]) {
 
 然后在第二次调用 `hello` 方法时，加一个断点：
 
-![objc-message-objc-msgSend-with-cache](/Users/xiaozhededell/Documents/iOS/images/objc-message-objc-msgSend-with-cache.gif)
+![objc-message-objc-msgSend-with-cache](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-objc-msgSend-with-cache.gif)
 
 `objc_msgSend` 并没有走 `lookupImpOrForward` 这个方法，而是直接结束，打印了另一个 `hello` 字符串。
 
@@ -515,7 +513,7 @@ int main(int argc, const char * argv[]) {
 
 好，现在重新运行程序至第二个 `hello` 方法调用之前：
 
-![objc-message-before-flush-cache](/Users/xiaozhededell/Documents/iOS/images/objc-message-before-flush-cache.png)
+![objc-message-before-flush-cache](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-before-flush-cache.png)
 
 打印缓存中 bucket 的内容：
 
@@ -564,11 +562,11 @@ int main(int argc, const char * argv[]) {
 }
 ```
 
-![objc-message-after-flush-cache](/Users/xiaozhededell/Documents/iOS/images/objc-message-after-flush-cache.png)
+![objc-message-after-flush-cache](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-after-flush-cache.png)
 
 这样 `XXObject` 中就不存在 `hello` 方法对应实现的缓存了。然后继续运行程序：
 
-![objc-message-after-flush-cache-trap-in-lookup-again](/Users/xiaozhededell/Documents/iOS/images/objc-message-after-flush-cache-trap-in-lookup-again.png)
+![objc-message-after-flush-cache-trap-in-lookup-again](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-after-flush-cache-trap-in-lookup-again.png)
 
 虽然第二次调用 `hello` 方法，但是因为我们清除了 `hello` 的缓存，所以，会再次进入 `lookupImpOrForward` 方法。
 
@@ -598,11 +596,11 @@ int main(int argc, const char * argv[]) {
 
 在第一个 `hello` 方法调用之前将实现加入缓存：
 
-![objc-message-add-imp-to-cache](/Users/xiaozhededell/Documents/iOS/images/objc-message-add-imp-to-cache.png)
+![objc-message-add-imp-to-cache](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-add-imp-to-cache.png)
 
 然后继续运行代码：
 
-![objc-message-run-after-add-cache](/Users/xiaozhededell/Documents/iOS/images/objc-message-run-after-add-cache.png)
+![objc-message-run-after-add-cache](https://github.com/draveness/analyze/raw/master/contents/images/objc-message-run-after-add-cache.png)
 
 可以看到，我们虽然没有改变 `hello` 方法的实现，但是在 **objc_msgSend** 的消息发送链路中，使用错误的缓存实现 `cached_imp` 拦截了实现的查找，打印出了 `Cached Hello`。
 
