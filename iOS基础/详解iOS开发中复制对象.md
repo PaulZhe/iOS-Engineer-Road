@@ -63,7 +63,7 @@
 - 集合的深复制(deep copy)：集合的深复制有两种方法。
   1. 可以用 initWithArray:copyItems: 将第二个参数设置为YES即可深复制，如
         ```objective-c
-        NSDictionary shallowCopyDict = [[NSDictionary alloc] initWithDictionary:someDictionary copyItems:YES];
+        NSDictionary *shallowCopyDict = [[NSDictionary alloc] initWithDictionary:someDictionary copyItems:YES];
         ​```objectivec
      如果你用这种方法深复制，集合里的每个对象都会收到 copyWithZone: 消息。如果集合里的对象遵循 NSCopying 协议，那么对象就会被深复制到新的集合。如果对象没有遵循 NSCopying 协议，而尝试用这种方法进行深复制，会在运行时出错。copyWithZone: 这种拷贝方式只能够提供一层内存拷贝(one-level-deep copy)，而非真正的深复制。
      ```
