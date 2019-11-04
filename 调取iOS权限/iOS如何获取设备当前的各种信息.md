@@ -8,18 +8,19 @@
 
 - 说在前面的：
 
-   1. 目录前面11条的信息很好获取，好多都是一行代码的事，参考博客:
+  1. 目录前面11条的信息很好获取，好多都是一行代码的事，参考博客:
 
-      1. [iOS 如何获取设备的各种信息](http://www.cocoachina.com/articles/20149) 
+     1. [iOS 如何获取设备的各种信息](http://www.cocoachina.com/articles/20149) 
 
-      	2. [iOS怎么判断设备的WiFi开关是否打开？](https://segmentfault.com/q/1010000003901530/a-1020000003904523)
-       	3. 设备像素比是什么：[Android dp 和 CSS px](https://www.jianshu.com/p/52af18472472)
+     	2. [iOS怎么判断设备的WiFi开关是否打开？](https://segmentfault.com/q/1010000003901530/a-1020000003904523)
+      	3. 设备像素比是什么：[Android dp 和 CSS px](https://www.jianshu.com/p/52af18472472)
 
   2. 到判断蓝牙和定位开关状态就要导入苹果官方提供的框架了，至于如何导入框架：在工程文件General -> Linked Frameworks and Libraries中点加号添加即可
 
      ![](https://img-blog.csdn.net/20160402165316572)
 
      	1. 定位参考博客：[iOS 判断APP是否打开定位，并实现直接跳转打开定位](https://blog.csdn.net/wangqinglei0307/article/details/78672689)
+     
       	2. 蓝牙参考博客：[iOS中蓝牙开发](https://www.jianshu.com/p/e7df216f9e5e) 核心就是协议方法```-(void)centralManagerDidUpdateState:(CBCentralManager *)central```的回调和参数 central.state 的几种枚举值状态，判断一下就好，因为要遵循主设备的委托——CBCentralManagerDelegate，所以没有将其封装在工具类中。
 
 - 目录：
@@ -307,8 +308,8 @@
 
   3. 推送权限判断参考博客（等系统学习后再另开一篇博客介绍）：
      	- [iOS推送权限开发判断](https://www.jianshu.com/p/bdc64eb29908)
-     	- [UNNotificationSettings属性详解（准确的判断用户是否打开了推送开关）](https://www.jianshu.com/p/61dd9dd431a9)
-     	- [活久见的重构 - iOS 10 UserNotifications 框架解析](https://onevcat.com/2016/08/notification/)
+        	- [UNNotificationSettings属性详解（准确的判断用户是否打开了推送开关）](https://www.jianshu.com/p/61dd9dd431a9)
+        	- [活久见的重构 - iOS 10 UserNotifications 框架解析](https://onevcat.com/2016/08/notification/)
 
 - 目录
 
@@ -413,3 +414,15 @@
     }
 }
 ```
+
+## 2019.11.04 更新
+
+在苹果更新 iOS 13以后，原来的蓝牙权限在IOS 13被遗弃，改成了 `NSBluetoothAlwaysUsageDescription`
+
+在info.plist里面添加
+
+NSBluetoothAlwaysUsageDescription 或者 Privacy - Bluetooth Peripheral Usage Description 权限字段  value 也是你的蓝牙用途
+
+![](https://upload-images.jianshu.io/upload_images/5252634-0d2f523e7872c5eb.png)
+
+[NSBluetoothAlwaysUsageDescription苹果字段说明文档](https://links.jianshu.com/go?to=https%3A%2F%2Fdeveloper.apple.com%2Fdocumentation%2Fbundleresources%2Finformation_property_list%2Fnsbluetoothalwaysusagedescription)
