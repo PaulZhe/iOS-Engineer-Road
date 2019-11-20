@@ -34,7 +34,7 @@
    2. 在 `Class（类）` 的`cache`中找这个`selector`，找不到的话在 `bits`其中的 `class_rw_t `  中找到 `methods` 对应的 `selector`；
    3. 如果在 `Class（类）` 中没有找到这个 `selector`，就继续在它的 `superClass（父类）`中寻找；
    4. 一旦找到对应的 `selector`，直接执行 `recever` 对应 `selector` 方法实现的 `IMP（方法实现）`。
-   5. 若找不到对应的 `selector`，消息被转发或者临时向 `recever` 添加这个 `selector` 对应的实现方法，否则就会发生崩溃。
+   5. 如果在父类方法中一直查到根类还没有找到对应的`selector`，就会进入消息转发流程
 
 在上述过程中涉及了好几个新的概念：`objc_msgSend`、`isa 指针`、`Class（类）`、`IMP（方法实现）` 等，下面我们来具体讲解一下各个概念的含义。
 

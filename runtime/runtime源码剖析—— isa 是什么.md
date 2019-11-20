@@ -45,7 +45,6 @@ union isa_t {
 ```objective-c
 typedef struct objc_class *Class;
 struct objc_class : objc_object {
-  	Class isa;
     Class superclass;
     cache_t cache;             // formerly cache pointer and vtable
     class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags
@@ -66,7 +65,7 @@ struct objc_class : objc_object {
 
 
 
-这张图解释的非常清楚，meta class的isa指向了root meta class(绝大部分情况下root class就是NSObject的meta class)，root meta class的isa指向自身，isa的链路就是这样了。
+这张图解释的非常清楚，meta class的isa指向了root meta class(绝大部分情况下root class就是NSObject的meta class,NSObject的meta class的父类指向自身)，root meta class的isa指向自身，isa的链路就是这样了。
 
 当**实例方法**被调用时，它要通过自己持有的 `isa` 来查找对应的类，然后在这里的 `class_data_bits_t` 结构体中查找对应方法的实现。同时，每一个 `objc_class` 也有一个**指向自己的父类的指针** `super_class` 用来查找继承的方法。
 

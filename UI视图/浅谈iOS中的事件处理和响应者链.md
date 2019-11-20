@@ -1,7 +1,7 @@
 [TOC]
 # 引言
 
-- 在ios中，事件UIEvent类来表示，当一个事件发生时，系统会搜集的相关事件信息，创建一个UIEvent对象，最后将该事件转发给应用程序对象(UIApplication)。
+- 在iOS中，事件UIEvent类来表示，当一个事件发生时，系统会搜集的相关事件信息，创建一个UIEvent对象，最后将该事件转发给应用程序对象(UIApplication)。
 
 - 在 UIKit 中，UIApplication、UIView、UIViewController 这几个类都是直接继承自 UIResponder 类。这些对象都有响应事件的能力，因此也被称为响应对象，或者响应者。
 
@@ -25,11 +25,11 @@
 
 ## 传递过程
 
-- 在触摸事件中上面提到的“由主窗口决定如何将事件交给最合适的响应者”的过程是如何实现的呢？首先我们需要明确一个UIView对象能够接收触摸事件至少要保证以下三个条件：
+- 在触摸事件中上面提到的“由主窗口决定如何将事件交给最合适的响应者”的过程是如何实现的呢？首先我们需要明确一个UIView对象能够接收触摸事件至少要保证以下四个条件：
 
   1. userInteractionEnabled属性为YES，该属性表示允许控件同用户交互。
 	2. Hidden属性为NO。控件都看不见，自然不存在触摸
-  3. opacity属性值0 ～0.01。
+  3. alpha属性值不为0 ～0.01。
 	4. 触摸点在这个UIView的范围内。
 
 - 每当手指接触屏幕，操作系统会把事件传递给当前的 `App`， 在 `UIApplication`接收到手指的事件之后，就会去调用`UIWindow的hitTest:withEvent:`，看看当前点击的点是不是在window内，如果是则继续依次调用其 subView的`hitTest:withEvent:`方法，直到找到最后需要的view。调用结束并且hit-test view确定之后，便可以确定最合适的 View。
@@ -41,7 +41,7 @@
   ![img](https://user-gold-cdn.xitu.io/2018/8/1/164f4056fb573c0d?w=1258&h=601&f=png&s=119853)
 
 - 下面是 `- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event` 方法的内部实现
-	```objective-c
+	```objectivec
 	- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
   {
       if (self.hidden || !self.userInteractionEnabled || self.alpha < 0.01 || ![self pointInside:point withEvent:event] || ![self _isAnimatedUserInteractionEnabled]) {
@@ -65,7 +65,7 @@
 
 - 当我们知道最合适的 View 后，事件会 由上向下【子view -> 父view，控制器view -> 控制器】来找出合适响应事件的 View，来响应相关的事件。如果当前的 View 有添加手势，那么直接响应相应的事件，不会继续向下寻找了，如果没有手势事件，那么会看其是否实现了如下的方法：
 
-  ```objective-c
+  ```objectivec
   - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;//开始触摸
   - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;//手指移动
   - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;//结束触摸
@@ -78,7 +78,7 @@
 
 - 在响应方法内部，我们也可以将这个触摸事件继续传递给父控件的对应方法处理。
 
-  ```objective-c
+  ```objectivec
   - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
       [super touchesBegan:touches withEvent:event];//让下一个响应者可以有机会继续处理
   }
