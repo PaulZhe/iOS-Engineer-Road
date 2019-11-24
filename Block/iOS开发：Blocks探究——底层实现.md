@@ -121,7 +121,7 @@ struct __block_impl {
     void *isa;               // 用于保存 Block 结构体的实例指针
     int Flags;               // 标志位，在实现block的内部操作时会用到
     int Reserved;        // 今后版本升级所需的区域大小
-    void *FuncPtr;      // 函数指针
+    void *FuncPtr;      // Block 实际函数函数指针
 };
 ```
 
@@ -166,7 +166,7 @@ struct __main_block_impl_0 temp = __main_block_impl_0(__main_block_func_0, &__ma
 struct __main_block_impl_0 myBlock = &temp;
 ```
 
-这样，就容易看懂了。该代码将通过 `__main_block_impl_0` 构造函数，生成的 `__main_block_impl_0` 结构体（B lock 结构体）类型实例的指针，赋值给 `__main_block_impl_0` 结构体（Block 结构体）类型的指针变量 `myBlock`。
+这样，就容易看懂了。该代码将通过 `__main_block_impl_0` 构造函数，生成的 `__main_block_impl_0` 结构体（Block 结构体）类型实例的指针，赋值给 `__main_block_impl_0` 结构体（Block 结构体）类型的指针变量 `myBlock`。
 
 可以看到， 调用 `__main_block_impl_0` 构造函数的时候，传入了两个参数。
 
@@ -211,7 +211,7 @@ struct __main_block_impl_0 myBlock = &temp;
 
 ## Block 实质总结
 
-千言万语汇成一句话：Block 的实质就是对象。在C语言的底层实现里，它是一个结构体。这个结构体相当于`objc_class`的类对象结构体，用`_NSConcreteStackBlock`对其中成员变量`isa`初始化，`_NSConcreteStackBlock`相当于`class_t`结构体实例(在我的理解中就是该 block 实例的元类)。在将 Block 作为OC对象处理时，关于该类的信息放置于`_NSConcreteStackBlock`中。
+千言万语汇成一句话：Block 的实质就是对象。在C语言的底层实现里，它是一个结构体。
 
 ***
 
@@ -537,7 +537,7 @@ static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
 
 ## __block 说明符
 
-### __block修饰局部变量
+### __block修饰基本数据类型
 
 - 第二种方法是使用`__block 说明符`，更准确的表达方式为`__block 存储域类说明符`。
 - `__block 说明符`类似于 `static`、`auto`、`register` 说明符，它们用于指定将变量值设置到哪个存储域中。例如`auto` 表示作为自动变量存储在**栈**中， `static`表示作为静态变量存储在**数据区**中。
